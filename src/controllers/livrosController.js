@@ -3,21 +3,27 @@ import livros from "../models/Livro.js";
 class LivroController {
 
   static listarLivros = (req, res) => {
-    livros.find((err, livros) => {
-      res.status(200).json(livros)
-    })
+    livros.find()
+      .populate('autor')
+      .populate('editora')
+      .exec((err, livros) => {
+        res.status(200).json(livros)
+      })
   }
 
   static listarLivroPorID = (req, res) => {
     const id = req.params.id;
 
-    livros.findById(id, (err, livros) => {
-      if (err) {
-        res.status(400).send({ message: `${err.message} - Id do livro não localizado.` })
-      } else {
-        res.status(200).send(livros);
-      }
-    })
+    livros.findById(id)
+      .populate('autor', 'nome')
+      //especificando as chaves no populate é possível limitar quais campos serão mostrados
+      .exec((err, livros) => {
+        if (err) {
+          res.status(400).send({ message: `${err.message} - Id do livro não localizado.` })
+        } else {
+          res.status(200).send(livros);
+        }
+      })
   }
 
   static cadastrarLivro = (req, res) => {
@@ -55,6 +61,16 @@ class LivroController {
       } else {
         res.status(500).send({ message: err.message })
       }
+    })
+  }
+
+  static listarLivroPorEditora = (req, res) => {
+    const editora = req.query.editora
+    //query params, ou parâmetros de consulta, são um conjunto definido de parâmetros anexados ao final de uma URL
+    //são as extensões que ficam após o "?"
+
+    livros.find({ 'editora': editora }, {}, (err, livros) => {
+      res.status(200).send(livros)
     })
   }
 }
